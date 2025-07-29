@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>مساعد المقهى الصوتي</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #fff0f5;
+      color: #333;
+      text-align: center;
+      padding: 40px;
+    }
+    .menu {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    ul {
+      direction: rtl;
+      text-align: right;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+    button {
+      font-size: 20px;
+      padding: 12px 40px;
+      border: none;
+      border-radius: 10px;
+      background-color: #f48fb1;
+      color: white;
+      cursor: pointer;
+    }
+    #text {
+      margin-top: 30px;
+      font-size: 20px;
+      white-space: pre-line;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      min-height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>☕ مساعد المقهى الصوتي</h1>
+  <div class="menu">
+    <h2>الطلبات الممكنة:</h2>
+    <ul>
+      <li>أبغى كابتشينو</li>
+      <li>وش عندكم من الحلى؟</li>
+      <li>عندكم سبانش لاتيه؟</li>
+      <li>بكم الكابتشينو؟</li>
+      <li>أبغى ساندويتش تونا</li>
+      <li>متى تفتحون؟</li>
+      <li>في توصيل؟</li>
+      <li>وش مشروباتكم الباردة؟</li>
+    </ul>
+  </div>
+
+  <button onclick="startListening()">🎙️ اضغط وتكلم</button>
+  <div id="text">...</div>
+
+  <script>
+    const database = [
+      { keywords: ["كابتشينو", "أبغى"], answer: "طلبك كابتشينو تم استلامه ☕ وسعره 14 ريال" },
+      { keywords: ["قهوة", "تركية", "أبغى"], answer: "طلبك قهوة تركية في الطريق ☕" },
+      { keywords: ["سبانش", "لاتيه", "أبغى"], answer: "عندنا سبانش لاتيه بارد وساخن 🥤" },
+      { keywords: ["سعر", "لاتيه"], answer: "سعر اللاتيه 14 ريال." },
+      { keywords: ["سعر", "كابتشينو"], answer: "الكابتشينو بـ 14 ريال ☕" },
+      { keywords: ["ساندويتش", "أبغى"], answer: "عندنا ساندويتش دجاج وتونا، تحب أي نوع؟ 🥪" },
+      { keywords: ["حلى", "أبغى"], answer: "عندنا كيك تمر، براونيز، وتشيز كيك 🍰" },
+      { keywords: ["بكم", "الحلى"], answer: "أسعار الحلى تبدأ من 10 ريال حسب النوع 🍰" },
+      { keywords: ["متى", "تفتحون"], answer: "نفتح يوميًا من 6 الصباح إلى 12 الليل 🕛" },
+      { keywords: ["توصيل", "عندكم"], answer: "نعم نوصل عبر تطبيقات جاهز ومرسول وهنقرستيشن 🚗" },
+      { keywords: ["باردة", "مشروبات"], answer: "مشروباتنا الباردة: موهيتو، سبانش، لاتيه مثلج، كولد برو 🧊" }
+    ];
+
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "ar-SA";
+
+      recognition.onstart = () => {
+        document.getElementById("text").innerText = "🎤 جاري الاستماع...";
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("text").innerText = `أنت قلت: ${transcript}`;
+
+        let matchedAnswer = "عذرًا، لم أفهم طلبك. جرب تصيغ الجملة بطريقة مختلفة.";
+
+        for (let item of database) {
+          let matchCount = 0;
+          for (let word of item.keywords) {
+            if (transcript.includes(word)) matchCount++;
+          }
+          if (matchCount >= 2 || (item.keywords.length === 1 && matchCount === 1)) {
+            matchedAnswer = item.answer;
+            break;
+          }
+        }
+
+        speak(matchedAnswer);
+        document.getElementById("text").innerText += `\n🧠 الرد: ${matchedAnswer}`;
+      };
+
+      recognition.onerror = (event) => {
+        document.getElementById("text").innerText = "حدث خطأ: " + event.error;
+      };
+
+      recognition.start();
+    }
+
+    function speak(text) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ar-SA";
+      synth.speak(utterance);
+    }
+  </script>
+</body>
+</html>
